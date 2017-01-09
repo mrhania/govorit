@@ -33,6 +33,35 @@ function fetchWords(callback, accum) {
     });
 }
 
-fetchWords(function (words) {
-    console.log(words);
-});
+let queue = [];
+function nextWord() {
+    if (queue.length === 0) {
+        fetchWords(function (words) {
+            queue.push(...words);
+            nextWord();
+        });
+        return;
+    }
+
+    let word = queue.shift();
+    if (queue.length < 5) {
+        fetchWords(function (words) {
+            queue.push(...words);
+        });
+    }
+
+    /*
+     * This makes sure this callback is fired only once. Because for some weird
+     * reason it is called even when span is not actually clicked and causes
+     * the whole program logic to break. No idea why.
+     */
+    let fired = { value: false };
+    $('#word').html(word).on('click', function () {
+        if (!fired.value) {
+            fired.value = true;
+            nextWord();
+        }
+    });
+}
+
+nextWord();
