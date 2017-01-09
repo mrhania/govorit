@@ -1,7 +1,8 @@
 function fetchWords(callback, accum) {
+    let jsonpId = '__wcmb' + Date.now() + '__';
     $.ajax({
         url: 'https://ru.wiktionary.org/w/api.php',
-        jsonpCallback: '__wmcb__',
+        jsonpCallback: jsonpId,
         dataType: 'jsonp',
         data: {
             action: 'query',
@@ -9,7 +10,7 @@ function fetchWords(callback, accum) {
             rnlimit: '10',
 
             format: 'json',
-            callback: '__wmcb__',
+            callback: jsonpId,
         },
         success: function (response) {
             if (accum === undefined) {
