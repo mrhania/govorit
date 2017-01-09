@@ -1,3 +1,20 @@
+function filterM(array, pred, callback) {
+    let result = [];
+    let aux = function (i) {
+        if (i === array.length) {
+            callback(result);
+        } else {
+            pred(array[i], function (valid) {
+                if (valid) {
+                    result.push(array[i]);
+                }
+                aux(i + 1);
+            });
+        }
+    };
+    aux(0);
+}
+
 function fetchWords(callback, accum) {
     let jsonpId = '__wcmb' + Date.now() + '__';
     $.ajax({
