@@ -1,4 +1,4 @@
-function fetchWords(queue) {
+function fetchWords(callback, accum) {
     $.ajax({
         url: 'https://ru.wiktionary.org/w/api.php',
         jsonpCallback: '__wmcb__',
@@ -12,18 +12,26 @@ function fetchWords(queue) {
             callback: '__wmcb__',
         },
         success: function (response) {
-            let words = response.query.random
+            if (accum === undefined) {
+                accum = [];
+            }
+
+            let newWords = response.query.random
                 .map((entry) => entry.title)
                 .filter((word) => word.match(/^[\u0430-\u044f]+$/i))
                 .filter((word) => word.length >= 3);
-            queue.push(...words);
-            if (queue.length < 10) {
-                fetchWords(queue);
+
+            let allWords = accum.concat(newWords);
+            if (allWords.length < 10) {
+                fetchWords(callback, allWords);
+            } else {
+                callback(allWords);
             }
         },
         // TODO: Add support for handling failures.
     });
 }
 
-let queue = [];
-fetchWords(queue);
+fetchWords(function (words) {
+    console.log(words);
+});
