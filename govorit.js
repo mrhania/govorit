@@ -1,12 +1,12 @@
-function filterM(array, pred, callback) {
+function filterMap(array, pred, callback) {
     let result = [];
     let aux = function (i) {
         if (i === array.length) {
             callback(result);
         } else {
-            pred(array[i], function (valid) {
-                if (valid) {
-                    result.push(array[i]);
+            pred(array[i], function (trans) {
+                if (trans !== null) {
+                    result.push(trans);
                 }
                 aux(i + 1);
             });
