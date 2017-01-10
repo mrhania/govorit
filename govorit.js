@@ -59,7 +59,7 @@ function fetchSamples() {
 }
 
 let queue = [];
-function nextSample() {
+let nextSample = function () {
     if (queue.length === 0) {
         fetchSamples().then(function (samples) {
             queue.push(...samples);
@@ -81,19 +81,16 @@ function nextSample() {
      * the whole program logic to break. No idea why.
      */
     let fired = { value: false };
-    $('#preview').html(sample.word).on('click', function () {
-        if (fired.value) {
-            return;
-        }
-        fired.value = true;
-
-        let playback = $('#playback');
-        playback.on('ended', function () {
-            nextSample();
-        });
-        playback[0].play();
-    });
+    $('#preview').html(sample.word);
     $('#playback').attr('src', audioFilepath(sample.word));
 }
+
+$('#preview').on('click', function () {
+    $('#playback')[0].play();
+});
+
+$('#playback').on('ended', function () {
+    nextSample();
+});
 
 nextSample();
