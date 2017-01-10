@@ -70,11 +70,6 @@ let nextWord = function () {
         });
     }
 
-    /*
-     * This makes sure this callback is fired only once. Because for some weird
-     * reason it is called even when span is not actually clicked and causes
-     * the whole program logic to break. No idea why.
-     */
     $('#preview').html(word);
     $('#enlarger').textfill({ maxFontPixels: -1 });
     $('#playback').attr('src', audioFilepath(word));
