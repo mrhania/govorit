@@ -1,20 +1,3 @@
-function filterMap(array, pred, callback) {
-    let result = [];
-    let aux = function (i) {
-        if (i === array.length) {
-            callback(result);
-        } else {
-            pred(array[i], function (trans) {
-                if (trans !== null) {
-                    result.push(trans);
-                }
-                aux(i + 1);
-            });
-        }
-    };
-    aux(0);
-}
-
 function audioFilepath(word) {
     return 'https://en.wikipedia.org/wiki/Special:Redirect/file/Ru-' + word + '.ogg';
 }
