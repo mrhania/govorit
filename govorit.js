@@ -61,7 +61,13 @@ function fetchSamples() {
         prefixFetches.push(fetchSamplesWithPrefix(String.fromCharCode(i)));
     }
     return Promise.all(prefixFetches).then(function (results) {
-        return [].concat.apply([], results); // JavaScript-ish flatten.
+        let flat = [].concat.apply([], results); // JavaScript-ish flatten.
+        // Shuffle the result array.
+        for (let i = flat.length; i > 0; i--) {
+            let j = Math.floor(Math.random() * i);
+            [flat[i - 1], flat[j]] = [flat[j], flat[i - 1]];
+        }
+        return flat;
     });
 }
 
