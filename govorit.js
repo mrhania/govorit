@@ -75,7 +75,6 @@ let nextWord = function () {
      * reason it is called even when span is not actually clicked and causes
      * the whole program logic to break. No idea why.
      */
-    let fired = { value: false };
     $('#preview').html(word);
     $('#playback').attr('src', audioFilepath(word));
 }
