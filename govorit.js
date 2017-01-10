@@ -15,6 +15,10 @@ function filterMap(array, pred, callback) {
     aux(0);
 }
 
+function audioFilepath(word) {
+    return 'https://en.wikipedia.org/wiki/Special:Redirect/file/Ru-' + word + '.ogg';
+}
+
 function fetchSamplesWithPrefix(prefix) {
     let jsonpId = '__wcmb' + Date.now() + '__';
     return new Promise(function (resolve, reject) {
@@ -94,12 +98,13 @@ function nextSample() {
      * the whole program logic to break. No idea why.
      */
     let fired = { value: false };
-    $('#word').html(sample.word).on('click', function () {
+    $('#preview').html(sample.word).on('click', function () {
         if (!fired.value) {
             fired.value = true;
             nextSample();
         }
     });
+    $('#playback').attr('src', audioFilepath(sample.word));
 }
 
 nextSample();
