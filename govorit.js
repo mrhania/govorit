@@ -76,6 +76,7 @@ let nextWord = function () {
      * the whole program logic to break. No idea why.
      */
     $('#preview').html(word);
+    $('#enlarger').textfill({ maxFontPixels: -1 });
     $('#playback').attr('src', audioFilepath(word));
 }
 
