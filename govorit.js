@@ -15,55 +15,70 @@ function filterMap(array, pred, callback) {
     aux(0);
 }
 
-function fetchWords(callback, accum) {
+function fetchSamplesWithPrefix(prefix) {
     let jsonpId = '__wcmb' + Date.now() + '__';
-    $.ajax({
-        url: 'https://ru.wiktionary.org/w/api.php',
-        jsonpCallback: jsonpId,
-        dataType: 'jsonp',
-        data: {
-            action: 'query',
-            list: 'random',
-            rnlimit: '10',
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            url: 'https://en.wikipedia.org/w/api.php',
+            jsonpCallback: jsonpId,
+            dataType: 'jsonp',
+            data: {
+                action: 'query',
+                list: 'prefixsearch',
+                pslimit: 10,
+                psoffset: 10 * Math.floor(Math.random() * 100),
+                pssearch: 'File:Ru-' + prefix,
+                format: 'json',
+                callback: jsonpId,
+            },
+            success: function (response) {
+                let samples = response.query.prefixsearch.map(function (entry) {
+                    let filepath = entry.title;
+                    let match = filepath.match(/File\:Ru\-(.*)\.ogg/);
+                    if (match !== null) {
+                        let word = match[1];
+                        return { word, filepath };
+                    } else {
+                        return null;
+                    }
+                }).filter(function (entry) {
+                    if (entry === null) {
+                        return false;
+                    }
 
-            format: 'json',
-            callback: jsonpId,
-        },
-        success: function (response) {
-            if (accum === undefined) {
-                accum = [];
-            }
+                    return entry.word.match(/^[\u0430-\u044f]+$/i);
+                });
+                resolve(samples);
+            },
+            error: reject
+        });
+    });
+}
 
-            let newWords = response.query.random
-                .map((entry) => entry.title)
-                .filter((word) => word.match(/^[\u0430-\u044f]+$/i))
-                .filter((word) => word.length >= 3);
-
-            let allWords = accum.concat(newWords);
-            if (allWords.length < 10) {
-                fetchWords(callback, allWords);
-            } else {
-                callback(allWords);
-            }
-        },
-        // TODO: Add support for handling failures.
+function fetchSamples() {
+    let prefixFetches = [];
+    for (let i = '\u0430'.charCodeAt(0); i <= '\u044f'.charCodeAt(0); i++) {
+        prefixFetches.push(fetchSamplesWithPrefix(String.fromCharCode(i)));
+    }
+    return Promise.all(prefixFetches).then(function (results) {
+        return [].concat.apply([], results); // JavaScript-ish flatten.
     });
 }
 
 let queue = [];
-function nextWord() {
+function nextSample() {
     if (queue.length === 0) {
-        fetchWords(function (words) {
-            queue.push(...words);
-            nextWord();
+        fetchSamples().then(function (samples) {
+            queue.push(...samples);
+            nextSample();
         });
         return;
     }
 
-    let word = queue.shift();
-    if (queue.length < 5) {
-        fetchWords(function (words) {
-            queue.push(...words);
+    let sample = queue.shift();
+    if (queue.length < 10) {
+        fetchSamples().then(function (samples) {
+            queue.push(...samples);
         });
     }
 
@@ -73,12 +88,12 @@ function nextWord() {
      * the whole program logic to break. No idea why.
      */
     let fired = { value: false };
-    $('#word').html(word).on('click', function () {
+    $('#word').html(sample.word).on('click', function () {
         if (!fired.value) {
             fired.value = true;
-            nextWord();
+            nextSample();
         }
     });
 }
 
-nextWord();
+nextSample();
