@@ -65,7 +65,7 @@ let nextWord = function () {
 
     let word = queue.shift();
     if (queue.length < 10) {
-        fetchWord().then(function (words) {
+        fetchWords().then(function (words) {
             queue.push(...words);
         });
     }
