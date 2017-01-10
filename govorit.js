@@ -99,10 +99,16 @@ function nextSample() {
      */
     let fired = { value: false };
     $('#preview').html(sample.word).on('click', function () {
-        if (!fired.value) {
-            fired.value = true;
-            nextSample();
+        if (fired.value) {
+            return;
         }
+        fired.value = true;
+
+        let playback = $('#playback');
+        playback.on('ended', function () {
+            nextSample();
+        });
+        playback[0].play();
     });
     $('#playback').attr('src', audioFilepath(sample.word));
 }
