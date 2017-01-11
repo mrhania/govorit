@@ -28,7 +28,7 @@ function fetchWordsWithPrefix(prefix) {
                         return null;
                     }
                 }).filter(function (word) {
-                    return word !== null;
+                    return word !== null && word.length >= 3;
                 });
                 resolve(words);
             },
