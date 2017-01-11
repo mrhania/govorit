@@ -1,47 +1,59 @@
-function audioFilepath(word) {
+const WAPI_PAGE_SIZE = 10;
+const WAPI_PAGE_COUNT = 100;
+
+function wapiAudioPath(word) {
     return 'https://en.wikipedia.org/wiki/Special:Redirect/file/Ru-' + word + '.ogg';
 }
 
-function fetchWordsWithPrefix(prefix) {
-    let jsonpId = '__wcmb' + Date.now() + '__';
+function wapiRequestData(prefix) {
+    return {
+        action: 'query',
+        list: 'prefixsearch',
+        pslimit: WAPI_PAGE_SIZE,
+        psoffset: WAPI_PAGE_SIZE * Math.floor(Math.random() * WAPI_PAGE_COUNT),
+        pssearch: 'File:Ru-' + prefix,
+        format: 'json',
+    };
+}
+
+function wapiParseResponse(response, resolve) {
+    let results = response.query.prefixsearch;
+    let words = results.map(function (entry) {
+        let filepath = entry.title;
+        let match = filepath.match(/File\:Ru\-([\u0430-\u044f]+)\.ogg/);
+        if (match !== null) {
+            return match[1];
+        } else {
+            return null;
+        }
+    }).filter(function (word) {
+        return word !== null && word.length >= 3;
+    });
+    resolve(words);
+}
+
+function wapiFetchWithPrefix(prefix) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             url: 'https://en.wikipedia.org/w/api.php',
-            jsonpCallback: jsonpId,
             dataType: 'jsonp',
-            data: {
-                action: 'query',
-                list: 'prefixsearch',
-                pslimit: 10,
-                psoffset: 10 * Math.floor(Math.random() * 100),
-                pssearch: 'File:Ru-' + prefix,
-                format: 'json',
-                callback: jsonpId,
-            },
+            jsonp: 'callback',
+            data: wapiRequestData(prefix),
             success: function (response) {
-                let words = response.query.prefixsearch.map(function (entry) {
-                    let filepath = entry.title;
-                    let match = filepath.match(/File\:Ru\-([\u0430-\u044f]+)\.ogg/);
-                    if (match !== null) {
-                        return match[1];
-                    } else {
-                        return null;
-                    }
-                }).filter(function (word) {
-                    return word !== null && word.length >= 3;
-                });
-                resolve(words);
+                wapiParseResponse(response, resolve);
             },
-            error: reject
+            error: reject,
         });
     });
 }
 
-function fetchWords() {
+function wapiFetch() {
+    // Generate list of fetch promises for each cyrillic letter.
     let prefixFetches = [];
     for (let i = '\u0430'.charCodeAt(0); i <= '\u044f'.charCodeAt(0); i++) {
-        prefixFetches.push(fetchWordsWithPrefix(String.fromCharCode(i)));
+        prefixFetches.push(wapiFetchWithPrefix(String.fromCharCode(i)));
     }
+
     return Promise.all(prefixFetches).then(function (results) {
         let flat = [].concat.apply([], results); // JavaScript-ish flatten.
         // Shuffle the resulting array.
@@ -56,7 +68,7 @@ function fetchWords() {
 let queue = [];
 let nextWord = function () {
     if (queue.length === 0) {
-        fetchWords().then(function (words) {
+        wapiFetch().then(function (words) {
             queue.push(...words);
             nextWord();
         });
@@ -65,14 +77,14 @@ let nextWord = function () {
 
     let word = queue.shift();
     if (queue.length < 10) {
-        fetchWords().then(function (words) {
+        wapiFetch().then(function (words) {
             queue.push(...words);
         });
     }
 
     $('#preview').html(word);
     $('#enlarger').textfill({ maxFontPixels: -1 });
-    $('#playback').attr('src', audioFilepath(word));
+    $('#playback').attr('src', wapiAudioPath(word));
 }
 
 $('body').on('click', function () {
