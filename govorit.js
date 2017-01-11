@@ -75,7 +75,7 @@ let nextWord = function () {
     $('#playback').attr('src', audioFilepath(word));
 }
 
-$('#preview').on('click', function () {
+$('body').on('click', function () {
     $('#playback')[0].play();
 });
 
